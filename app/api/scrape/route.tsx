@@ -1,17 +1,12 @@
 import { load } from 'cheerio';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 
-type Body = {
-  search: string;
-}
-
-export async function POST(req: Request, res: NextApiResponse) {
+export async function POST(req: Request) {
   console.log('in route');
   const method = req.method;
 
-  if (method === 'POST') {
+  try {
     const data = await req.json();
     const { search } = data;
     const url = `https://www.newegg.com/p/pl?d=${search}`;
@@ -22,16 +17,25 @@ export async function POST(req: Request, res: NextApiResponse) {
     const html = await page.content();
 
     const $ = load(html);
-    const titles: string[] = []; 
+
+    const products: {}[] = []; 
     $('.item-cell').each((i, el) => {
-      const title = $('.item-title', el).text()
-      titles.push(title);
+      // Limit to 5 products
+      if (i >= 5) return false;
+
+      const title = $('.item-title', el).text();
+      let price = $('li.price-current', el).text();
+      price = price.slice(0, -2);
+      
+      // TOOD
+      const imgURL = $('img.checkedimg2', el);
+
+      products.push({title, price, imgURL});
     });
 
-    return NextResponse.json(titles);
-  } else {
-    res.send('Method not allowed');
-    return NextResponse.json({ message: 'Error', success: false});
+    return NextResponse.json(products);
+  } catch(err) {
+    return NextResponse.json({ message: err, success: false});
   }
   
 }
