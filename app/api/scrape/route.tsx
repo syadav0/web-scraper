@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       price = price.slice(0, -2);
       
       // TOOD
-      const imgURL = $('img.checkedimg2', el);
+      const imgURL = '';
 
       products.push({title, price, imgURL});
     });
